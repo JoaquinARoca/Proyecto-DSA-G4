@@ -15,7 +15,7 @@
         app:layout_constraintEnd_toEndOf="@id/infoLy"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@id/infoLy"
-        app:layout_constraintTop_toTopOf="@id/infoLy" >
+        app:layout_constraintTop_toTopOf="@id/infoLy">
 
         <TextView
             android:id="@+id/userinfotV"

@@ -3,10 +3,10 @@ package dsa.proyecto.G4.models;
 public class Product {
     private String id;
     private String nombre;
-    private Double precio;
+    private Integer precio;
 
     // Constructor con parámetros
-    public Product(String id, String nombre, Double precio) {
+    public Product(String id, String nombre, Integer precio) {
         this.id = id;
         this.nombre = nombre;
         this.precio = precio;
@@ -30,10 +30,10 @@ public class Product {
         this.nombre = nombre;
     }
 
-    public Double getPrecio() {
+    public Integer getPrecio() {
         return precio;
     }
-    public void setPrecio(Double precio) {
+    public void setPrecio(Integer precio) {
         this.precio = precio;
     }
 

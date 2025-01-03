@@ -6,14 +6,15 @@ public class User {
     private String id;
     private String nombre;
     private String contraseña;
-    private int saldo;
+    private Integer saldo;
+    private String perfil;
 
     public User () {
         this.setId(RandomUtils.getId());
     }
 
     public User(String nombre, String contraseña) {
-        this(null,nombre,contraseña,100);
+        this(null,nombre,contraseña,"1",0);
     }
 
     public User(String id, String nombre, String contraseña) {
@@ -21,13 +22,22 @@ public class User {
         if(id!=null) this.setId(id);
         this.nombre = nombre;
         this.contraseña = contraseña;
-        this.saldo = 100;
+        this.saldo = 0;
+        this.perfil = "1";
     }
-
     public User(String id, String nombre, String contraseña, Integer saldo) {
+        this();
+        if(id!=null) this.setId(id);
+        this.nombre = nombre;
+        this.contraseña = contraseña;
+        this.saldo = saldo;
+        this.perfil = "1";
+    }
+    public User(String id, String nombre, String contraseña, String perfil, Integer saldo) {
         this.id = id;
         this.nombre = nombre;
         this.contraseña = contraseña;
+        this.perfil = perfil;
         this.saldo = saldo;
     }
 
@@ -44,8 +54,15 @@ public class User {
     public Integer getSaldo() {
         return saldo;
     }
-    public void setSaldo(int saldo) {
+    public void setSaldo(Integer saldo) {
         this.saldo = saldo;
+    }
+
+    public String getPerfil() {
+        return perfil;
+    }
+    public void setPerfil(String perfil) {
+        this.perfil = perfil;
     }
 }
 

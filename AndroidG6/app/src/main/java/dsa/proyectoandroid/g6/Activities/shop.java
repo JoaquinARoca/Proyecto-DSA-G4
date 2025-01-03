@@ -1,31 +1,20 @@
 package dsa.proyectoandroid.g6.Activities;
 
-import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import dsa.proyectoandroid.g6.MainActivity;
-import dsa.proyectoandroid.g6.ProductAdapter;
-import dsa.proyectoandroid.g6.ProductService;
+import dsa.proyectoandroid.g6.AdaptersAndServices.ProductAdapter;
 import dsa.proyectoandroid.g6.R;
-import dsa.proyectoandroid.g6.RetrofitClient;
-import dsa.proyectoandroid.g6.UserAdapter;
-import dsa.proyectoandroid.g6.UserService;
 import dsa.proyectoandroid.g6.models.Product;
 import retrofit2.Call;
 import retrofit2.Callback;

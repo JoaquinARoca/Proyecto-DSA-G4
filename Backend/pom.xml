@@ -82,9 +82,8 @@
     <dependency>
       <groupId>org.mariadb.jdbc</groupId>
       <artifactId>mariadb-java-client</artifactId>
-      <version>3.1.2</version> <!-- Asegúrate de usar la última versión -->
+      <version>2.4.3</version>
     </dependency>
-
   </dependencies>
 
   <build>

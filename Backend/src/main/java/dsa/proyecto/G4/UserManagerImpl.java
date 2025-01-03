@@ -1,9 +1,8 @@
 package dsa.proyecto.G4;
 
-import dsa.proyecto.G4.models.User;
+import dsa.proyecto.G4.models.*;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Logger;
 
 public class UserManagerImpl implements UserManager {
@@ -43,10 +42,14 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
-    public User addUsuario(User usuario) {
-        usuarios.add(usuario);
+    public User addUsuario(User u) {
+        usuarios.add(u);
+        return u;
+    }
 
-        return usuario;
+    @Override
+    public void addUsuarios(List<User> users){
+        this.usuarios = users;
     }
 
     public User addUsuario(String id,String nombre,String contraseña){
@@ -58,7 +61,7 @@ public class UserManagerImpl implements UserManager {
 
     @Override
     public List<User> getUsuarios() {
-        return new LinkedList<>(usuarios);
+        return this.usuarios;
     }
 
     @Override
@@ -68,8 +71,9 @@ public class UserManagerImpl implements UserManager {
            removeUsuario(id);
             u1.setNombre(u.getNombre());
             u1.setContraseña(u.getContraseña());
+            u1.setSaldo(u.getSaldo());
+            u1.setPerfil(u.getPerfil());
             addUsuario(u1);
-
         }else {
             logger.warning("not found"+u);
         }
@@ -94,5 +98,36 @@ public class UserManagerImpl implements UserManager {
         }
 
         return user;
+    }
+
+    @Override
+    public List<Purchase> ordenaInventario(List<Purchase> purchases){
+        // Mapa para agrupar por idP
+        Map<String, Purchase> groupedPurchases = new HashMap<>();
+
+        for (Purchase purchase : purchases) {
+            // Si ya existe un registro para este idP, sumamos la cantidad
+            if (groupedPurchases.containsKey(purchase.getIdP())) {
+                Purchase existingPurchase = groupedPurchases.get(purchase.getIdP());
+                existingPurchase.setCantidad(existingPurchase.getCantidad() + purchase.getCantidad());
+            } else {
+                // Si no existe, añadimos una nueva entrada al mapa
+                groupedPurchases.put(purchase.getIdP(), new Purchase(purchase.getIdU(), purchase.getIdP(), purchase.getCantidad()));
+            }
+        }
+
+        // Convertir los valores del mapa de nuevo en una lista
+        return new ArrayList<>(groupedPurchases.values());
+    }
+    @Override
+    public Integer calculaNuevoSaldo(String id, Purchase purchase, List<Product> products){
+        Product comprado = new Product();
+        for(Product p : products)
+            if(p.getId().equals(purchase.getIdP()))
+                comprado = p;
+
+        int precio = purchase.getCantidad() * comprado.getPrecio();
+        int nuevoSaldo = getUsuarioPorId(id).getSaldo()-precio;
+        return nuevoSaldo;
     }
 }

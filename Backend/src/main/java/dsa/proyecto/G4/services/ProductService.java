@@ -2,8 +2,11 @@ package dsa.proyecto.G4.services;
 
 import dsa.proyecto.G4.ProductManager;
 import dsa.proyecto.G4.ProductManagerImpl;
+import dsa.proyecto.G4.db.orm.dao.IProductDAO;
+import dsa.proyecto.G4.db.orm.dao.ProductDAOImpl;
 import dsa.proyecto.G4.models.Product;
 import dsa.proyecto.G4.models.User;
+import dsa.proyecto.G4.util.RandomUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -18,16 +21,16 @@ import java.util.List;
 @Api(value = "/productos", description = "Endpoint to Product Service")
 @Path("/productos")
 public class ProductService {
-
+    private IProductDAO productdb;
     private ProductManager productManager;
 
     public ProductService() {
+        this.productdb = ProductDAOImpl.getInstance();
         this.productManager = ProductManagerImpl.getInstance();
 
         // Datos de ejemplo
         if (productManager.countProducts()==0) {
-            this.productManager.addProduct(new Product("1", "Pocion", 10.0));
-            this.productManager.addProduct(new Product("2", "Vickvaporub", 25.0));
+           this.productManager.addProductos(this.productdb.getProducts());
         }
     }
     @GET
@@ -54,7 +57,14 @@ public class ProductService {
         if (product.getNombre() == null || product.getPrecio() == null) {
             return Response.status(500).entity("Error de validación").build();
         }
+        Product repetido = this.productManager.getProductById(product.getId());
+        while(repetido!=null){
+            product.setId(RandomUtils.getId());
+            repetido = this.productManager.getProductById(product.getId());
+        }
+
         this.productManager.addProduct(product);
+        this.productdb.addProduct(product.getId(), product.getNombre(), product.getPrecio());
         return Response.status(201).entity(product).build();
     }
 

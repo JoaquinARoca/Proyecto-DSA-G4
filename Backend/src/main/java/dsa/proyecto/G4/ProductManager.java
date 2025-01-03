@@ -11,11 +11,13 @@ public interface ProductManager {
     // Agregar un nuevo producto
     void addProduct(Product product);
 
+    void addProductos(List<Product> LProducts);
+
     // Obtener todos los productos
     List<Product> getAllProducts();
 
     // Eliminar un producto por ID
     boolean removeProduct(String id);
 
-    int countProducts();
+    Integer countProducts();
 }

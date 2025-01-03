@@ -34,9 +34,12 @@ public class ProductManagerImpl implements ProductManager {
 
     @Override
     public void addProduct(Product product) {
-        productos.add(product);
+        this.productos.add(product);
     }
-
+    @Override
+    public void addProductos(List<Product> LProducts){
+        this.productos = LProducts;
+    }
     @Override
     public List<Product> getAllProducts() {
         return new LinkedList<>(productos);
@@ -48,7 +51,7 @@ public class ProductManagerImpl implements ProductManager {
     }
 
     @Override
-    public int countProducts(){
+    public Integer countProducts(){
         return productos.size();
     }
 }

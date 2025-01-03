@@ -1,4 +1,4 @@
-package dsa.proyectoandroid.g6;
+package dsa.proyectoandroid.g6.AdaptersAndServices;
 import android.content.Context;
 import android.graphics.Color;
 import android.view.View;
@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
+import dsa.proyectoandroid.g6.RetrofitClient;
 import dsa.proyectoandroid.g6.models.Product;
 import retrofit2.Call;
 import retrofit2.Callback;

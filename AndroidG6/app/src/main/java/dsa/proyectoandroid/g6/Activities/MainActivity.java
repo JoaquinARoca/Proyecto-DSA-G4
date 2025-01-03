@@ -1,23 +1,19 @@
-package dsa.proyectoandroid.g6;
+package dsa.proyectoandroid.g6.Activities;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+
 import android.widget.EditText;
 
 import java.io.IOException;
-import java.util.List;
 
-import dsa.proyectoandroid.g6.Activities.LoginActivity;
-import dsa.proyectoandroid.g6.Activities.SplashScreen;
+import dsa.proyectoandroid.g6.AdaptersAndServices.UserAdapter;
+import dsa.proyectoandroid.g6.R;
+import dsa.proyectoandroid.g6.models.SavedPreferences;
 import dsa.proyectoandroid.g6.models.User;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -37,6 +33,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if(SavedPreferences.getInstance().getMy_user()!=null){
+            Intent intent = new Intent( MainActivity.this, Dashboard.class);
+            startActivity(intent);
+        }
         userAdapter = new UserAdapter(); // Inicializar el adaptador
     }
 

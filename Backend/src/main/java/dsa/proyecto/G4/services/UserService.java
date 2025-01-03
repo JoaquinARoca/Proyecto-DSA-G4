@@ -1,8 +1,11 @@
 package dsa.proyecto.G4.services;
-
+import dsa.proyecto.G4.ProductManagerImpl;
 import dsa.proyecto.G4.UserManager;
 import dsa.proyecto.G4.UserManagerImpl;
+import dsa.proyecto.G4.db.orm.dao.*;
+import dsa.proyecto.G4.models.Purchase;
 import dsa.proyecto.G4.models.User;
+import dsa.proyecto.G4.util.RandomUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -12,22 +15,25 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.sql.SQLException;
 import java.util.List;
 
 @Api(value = "/usuarios", description = "Endpoint to User Service")
 @Path("/usuarios")
 public class UserService {
-
     private UserManager userManager;
+    private IProductDAO productdbU;
+    private IUserDAO userdb;
+    private IPurchaseDAO purchasedb;
 
     public UserService() {
         this.userManager = UserManagerImpl.getInstance();
-
+        this.userdb = UserDAOImpl.getInstance();
+        this.purchasedb = PurchaseDAOImpl.getInstance();
+        this.productdbU = ProductDAOImpl.getInstance();
         // Datos de ejemplo
         if (userManager.countUsers()==0) {
-            this.userManager.addUsuario(new User("1", "Alice", "123"));
-            this.userManager.addUsuario(new User("2", "Bob", "456"));
-            this.userManager.addUsuario(new User("3", "Charlie", "789"));
+            this.userManager.addUsuarios(this.userdb.getUsers());
         }
     }
 
@@ -43,25 +49,11 @@ public class UserService {
         return Response.status(200).entity(entity).build();
     }
 
-    @GET
-    @ApiOperation(value = "Obtener un usuario por nombre", notes = "Devuelve el usuario con el nombre especificado")
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Successful", response = User.class),
-            @ApiResponse(code = 404, message = "Usuario no encontrado")
-    })
-    @Path("/{nombre}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getUsuarioPorNombre(@PathParam("nombre") String nombre) {
-        User user = this.userManager.getUsuarioPorNombre(nombre);
-        if (user == null) return Response.status(404).build();
-        return Response.status(200).entity(user).build();
-    }
-
     @POST
     @ApiOperation(value = "Crear un nuevo usuario", notes = "Crea un nuevo usuario con la información proporcionada")
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Successful", response = User.class),
-            @ApiResponse(code= 406,message = "Ya existe un usuario con tu nombre y contraseña elije otra contraseña"),
+            @ApiResponse(code=406,message = "Existe un usuario con ese nombre"),
             @ApiResponse(code = 500, message = "Error de validación")
     })
     @Consumes(MediaType.APPLICATION_JSON)
@@ -70,10 +62,17 @@ public class UserService {
         //cambios 4.7
         if (usuario.getNombre() == null || usuario.getContraseña() == null) {
             return Response.status(500).entity("Error de validación").build();
-        } else if (this.userManager.buscaUsuario(usuario)== null) {
-            return Response.status(406).entity("Usuario  existente").build();
-        }else {
+        } else if (this.userManager.getUsuarioPorNombre(usuario.getNombre())!=null) {
+            return Response.status(406).entity("Existe un usuario con ese nombre").build();
+        } else {
+            usuario.setSaldo(100);
+            User repetido = this.userManager.getUsuarioPorId(usuario.getId());
+            while(repetido!=null){
+                usuario.setId(RandomUtils.getId());
+                repetido = this.userManager.getUsuarioPorId(usuario.getId());
+            }
             this.userManager.addUsuario(usuario);
+            this.userdb.addUser(usuario.getId(),usuario.getNombre(),usuario.getContraseña(),100,usuario.getPerfil());
             return Response.status(201).entity(usuario).build();
         }
     }
@@ -104,8 +103,9 @@ public class UserService {
     @PUT
     @ApiOperation(value= "update a User", notes = "asdasd")
     @ApiResponses(value = {
-           @ApiResponse(code=201,message = "Successful"),
-           @ApiResponse(code=404, message = "User not found")
+            @ApiResponse(code=201,message = "Successful"),
+            @ApiResponse(code=409,message = "Couldn't update user"),
+            @ApiResponse(code=404, message = "User not found")
     })
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -113,8 +113,86 @@ public class UserService {
     public Response updateUser(@PathParam("id") String id, User user){//cambios 4.7
         User u = this.userManager.updateUser(id,user);
         if(u == null) return Response.status(404).build();
+
+        try {
+            this.userdb.updateUser(u.getId(),u.getNombre(),u.getContraseña(),u.getSaldo(),u.getPerfil());
+        } catch (SQLException e) {
+            return Response.status(409).build();
+        }
         return Response.status(201).entity(u).build();
     }
 
+    @GET
+    @Path("/{id}/purchase")
+    @ApiOperation(value = "Obtener productos comprados por un usuario", notes = "Devuelve una lista de productos comprados por el usuario con el ID proporcionado")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successful", response = Purchase.class, responseContainer = "List"),
+            @ApiResponse(code = 404, message = "Usuario no encontrado o sin compras"),
+            @ApiResponse(code = 500, message = "Error interno del servidor")
+    })
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getPurchasesByUserId(@PathParam("id") String userId) {
+        try {
+            // Obtener las compras realizadas por el usuario
+            List<Purchase> purchases = this.purchasedb.getCompras(userId);
 
+            if (purchases == null || purchases.isEmpty()) {
+                return Response.status(404).entity("El usuario no tiene compras registradas o no existe").build();
+            }
+            purchases = this.userManager.ordenaInventario(purchases);
+            // Convertir a una entidad genérica para devolver como JSON
+            GenericEntity<List<Purchase>> entity = new GenericEntity<List<Purchase>>(purchases) {};
+            return Response.status(200).entity(entity).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(500).entity("Error interno del servidor").build();
+        }
+    }
+
+    @POST
+    @Path("/{id}/purchase")
+    @ApiOperation(value = "Registrar una nueva compra", notes = "Añade una nueva compra para el usuario con el ID proporcionado")
+    @ApiResponses(value = {
+            @ApiResponse(code = 201, message = "Compra registrada exitosamente"),
+            @ApiResponse(code = 400, message = "Datos de compra incompletos o inválidos"),
+            @ApiResponse(code = 404, message = "Usuario no encontrado"),
+            @ApiResponse(code = 500, message = "Error interno del servidor"),
+            @ApiResponse(code = 403,message = "Saldo insuficiente para realizar la compra")
+    })
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response addPurchase(@PathParam("id") String userId, Purchase purchase) {
+        try {
+            // Validar que la compra tenga datos válidos
+            if (purchase.getIdP() == null || purchase.getCantidad() <= 0) {
+                return Response.status(400).entity("Datos de compra incompletos o inválidos").build();
+            }
+
+            // Validar si el usuario existe
+            User u = this.userManager.getUsuarioPorId(userId);
+            if (u == null) {
+                return Response.status(404).entity("Usuario no encontrado").build();
+            }
+            int nuevoSaldo = this.userManager.calculaNuevoSaldo(userId,purchase,this.productdbU.getProducts());
+            if(nuevoSaldo<0)
+                return Response.status(403).entity("Saldo insuficiente").build();
+
+            u.setSaldo(nuevoSaldo);
+            this.userManager.updateUser(userId,u);
+            try {
+                this.userdb.updateUser(u.getId(),u.getNombre(),u.getContraseña(),u.getSaldo(),u.getPerfil());
+            } catch (SQLException e) {
+                return Response.status(409).build();
+            }
+            // Añadir la compra
+            this.purchasedb.addPurchase(userId, purchase.getIdP(), purchase.getCantidad());
+
+            // Retornar respuesta exitosa
+            return Response.status(201).entity(purchase).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(500).entity("Error interno del servidor").build();
+            //cambio
+        }
+    }
 }

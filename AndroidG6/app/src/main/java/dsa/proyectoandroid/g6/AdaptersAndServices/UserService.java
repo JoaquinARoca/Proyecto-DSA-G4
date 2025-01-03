@@ -1,4 +1,4 @@
-package dsa.proyectoandroid.g6;
+package dsa.proyectoandroid.g6.AdaptersAndServices;
 import dsa.proyectoandroid.g6.models.User;
 import retrofit2.Call;
 import retrofit2.http.Body;
