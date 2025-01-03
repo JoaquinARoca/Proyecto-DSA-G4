@@ -6,13 +6,14 @@ public class User {
     private String id;
     private String nombre;
     private String contraseña;
+    private int saldo;
 
     public User () {
         this.setId(RandomUtils.getId());
     }
 
     public User(String nombre, String contraseña) {
-        this(null,nombre,contraseña);
+        this(null,nombre,contraseña,100);
     }
 
     public User(String id, String nombre, String contraseña) {
@@ -20,8 +21,15 @@ public class User {
         if(id!=null) this.setId(id);
         this.nombre = nombre;
         this.contraseña = contraseña;
+        this.saldo = 100;
     }
 
+    public User(String id, String nombre, String contraseña, Integer saldo) {
+        this.id = id;
+        this.nombre = nombre;
+        this.contraseña = contraseña;
+        this.saldo = saldo;
+    }
 
     // Getters y Setters
     public String getId() { return id; }
@@ -32,5 +40,12 @@ public class User {
 
     public String getContraseña() { return contraseña; }
     public void setContraseña(String contraseña) { this.contraseña = contraseña; }
+
+    public Integer getSaldo() {
+        return saldo;
+    }
+    public void setSaldo(int saldo) {
+        this.saldo = saldo;
+    }
 }
 

@@ -16,7 +16,7 @@
      */
     public class Main {
         // Base URI the Grizzly HTTP server will listen on
-        public static final String BASE_URI = "http://192.168.130.96:8080/dsaApp/";
+        public static final String BASE_URI = "http://localhost:8080/dsaApp/";
 
         /**
          * Starts Grizzly HTTP server exposing JAX-RS resources defined in this application.
@@ -32,7 +32,7 @@
 
             BeanConfig beanConfig = new BeanConfig();
 
-            beanConfig.setHost("192.168.130.96:8080");
+            beanConfig.setHost("localhost:8080");
             beanConfig.setBasePath("/dsaApp");
             beanConfig.setContact("support@example.com");
             beanConfig.setDescription("REST API for Juego Manager");
