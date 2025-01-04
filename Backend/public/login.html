@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login and Registration Page</title>
     <style>
+        /* Estilos del formulario */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f9;
@@ -107,7 +108,6 @@
 
     let isLogin = true;
 
-    // Alternar entre login y registro
     toggleLink.addEventListener('click', () => {
         isLogin = !isLogin;
         if (isLogin) {
@@ -124,35 +124,27 @@
         errorMessage.textContent = '';
     });
 
-    // Manejo del formulario de login y registro
     authForm.addEventListener('submit', async function(event) {
         event.preventDefault();
 
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value.trim();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
 
         if (isLogin) {
             // Intento de inicio de sesión
             try {
-                const response = await fetch(`http://localhost:8080/dsaApp/usuarios/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nombre: username, contraseña: password })
-                });
-
+                const response = await fetch(`http://localhost:8080/dsaApp/usuarios/${username}`);
                 if (response.ok) {
                     const user = await response.json();
-                    console.log("Usuario autenticado:", user);
-
-                    // Guardar el ID del usuario en localStorage
-                    localStorage.setItem("userId", user.id);
-
-                    alert('Login successful!');
-                    window.location.href = 'tienda.html'; // Redirección
-                } else if (response.status === 401) {
-                    errorMessage.textContent = 'Invalid username or password';
+                    if (user.contraseña === password) {
+                        alert('Login successful!');
+                        // Redirección a tienda.html
+                        window.location.href = 'tienda.html';
+                    } else {
+                        errorMessage.textContent = 'Invalid username or password';
+                    }
                 } else {
-                    errorMessage.textContent = 'Error during login';
+                    errorMessage.textContent = 'Invalid username or password';
                 }
             } catch (error) {
                 console.error('Error en el login:', error);
@@ -160,7 +152,7 @@
             }
         } else {
             // Intento de registro
-            const confirmPassword = document.getElementById('confirmPassword').value.trim();
+            const confirmPassword = document.getElementById('confirmPassword').value;
             if (password !== confirmPassword) {
                 errorMessage.textContent = 'Passwords do not match';
                 return;
@@ -169,7 +161,9 @@
             try {
                 const response = await fetch(`http://localhost:8080/dsaApp/usuarios`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({ nombre: username, contraseña: password })
                 });
 
@@ -181,10 +175,8 @@
                     submitButton.textContent = 'Login';
                     toggleLink.textContent = "Don't have an account? Register";
                     authForm.reset();
-                } else if (response.status === 406) {
-                    errorMessage.textContent = 'Username already exists';
-                } else {
-                    errorMessage.textContent = 'Error during registration';
+                } else if (response.status === 500) {
+                    errorMessage.textContent = 'Username already exists or validation error';
                 }
             } catch (error) {
                 console.error('Error en el registro:', error);
@@ -193,5 +185,6 @@
         }
     });
 </script>
+
 </body>
 </html>

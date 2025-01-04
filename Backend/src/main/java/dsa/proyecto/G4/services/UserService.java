@@ -17,7 +17,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
 
 @Api(value = "/usuarios", description = "Endpoint to User Service")
@@ -39,7 +38,6 @@ public class UserService {
         }
     }
 
-
     @GET
     @ApiOperation(value = "Obtener todos los usuarios", notes = "Devuelve una lista de todos los usuarios")
     @ApiResponses(value = {
@@ -50,6 +48,19 @@ public class UserService {
         List<User> usuarios = this.userManager.getUsuarios();
         GenericEntity<List<User>> entity = new GenericEntity<List<User>>(usuarios) {};
         return Response.status(200).entity(entity).build();
+    }
+
+    @GET
+    @ApiOperation(value = "Obtener un usuario por id", notes = "Devuelve una lista de todos los usuarios")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successful", response = User.class, responseContainer = "List"),
+    })
+    @Path("/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getUsuario(@PathParam("id") String id) {
+        User user = this.userManager.getUsuarioPorId(id);
+        return Response.status(200).entity(user).build();
     }
 
     @POST
@@ -85,40 +96,23 @@ public class UserService {
     @ApiOperation(value = "Iniciar sesión", notes = "Valida las credenciales del usuario")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Login exitoso"),
-            @ApiResponse(code = 400, message = "Credenciales incompletas"),
-            @ApiResponse(code = 401, message = "Credenciales incorrectas"),
-            @ApiResponse(code = 500, message = "Error interno del servidor")
+            @ApiResponse(code = 401, message = "Credenciales incorrectas")
     })
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response login(User credentials) {
-        try {
-            // Validar que se hayan proporcionado credenciales
-            if (credentials == null || credentials.getNombre() == null || credentials.getContraseña() == null) {
-                return Response.status(400).entity("Credenciales incompletas").build();
-            }
+        // Busca el usuario por nombre
+        User user = this.userManager.getUsuarioPorNombre(credentials.getNombre());
 
-            // Buscar el usuario por nombre
-            User user = this.userManager.getUsuarioPorNombre(credentials.getNombre());
-
-            // Verificar si el usuario existe y las contraseñas coinciden
-            if (user == null) {
-                return Response.status(401).entity("Usuario no encontrado").build();
-            }
-
-            if (!user.getContraseña().equals(credentials.getContraseña().trim())) {
-                return Response.status(401).entity("Contraseña incorrecta").build();
-            }
-
-            // Login exitoso
+        // Verifica si el usuario existe y si la contraseña coincide
+        if (user != null && user.getContraseña().equals(credentials.getContraseña())) {
+            // Si la autenticación es exitosa
             return Response.status(200).entity(user).build();
-        } catch (Exception e) {
-            // Manejar cualquier error inesperado
-            e.printStackTrace();
-            return Response.status(500).entity("Error interno del servidor").build();
+        } else {
+            // Si las credenciales son incorrectas
+            return Response.status(401).entity("Credenciales incorrectas").build();
         }
     }
-
 
     @PUT
     @ApiOperation(value= "update a User", notes = "asdasd")
@@ -171,110 +165,53 @@ public class UserService {
 
     @POST
     @Path("/{id}/purchase")
-    @ApiOperation(value = "Registrar nuevas compras", notes = "Deduce saldo y registra múltiples compras para el usuario con el ID proporcionado")
+    @ApiOperation(value = "Registrar una nueva compra", notes = "Añade una nueva compra para el usuario con el ID proporcionado")
     @ApiResponses(value = {
-            @ApiResponse(code = 201, message = "Compras registradas exitosamente"),
+            @ApiResponse(code = 201, message = "Compra registrada exitosamente"),
             @ApiResponse(code = 400, message = "Datos de compra incompletos o inválidos"),
             @ApiResponse(code = 404, message = "Usuario no encontrado"),
-            @ApiResponse(code = 403, message = "Saldo insuficiente para realizar las compras"),
-            @ApiResponse(code = 500, message = "Error interno del servidor")
+            @ApiResponse(code = 500, message = "Error interno del servidor"),
+            @ApiResponse(code = 403,message = "Saldo insuficiente para realizar la compra")
     })
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response addPurchase(@PathParam("id") String userId, HashMap<String, Integer> cart) {
+    public Response addPurchase(@PathParam("id") String userId, List<Purchase> purchases) {
         try {
-            // Log para inspeccionar el tipo de contenido recibido
-            System.out.println("Recibiendo solicitud para agregar compras.");
-            System.out.println("Carrito recibido: " + cart);
-
-            if (cart == null || cart.isEmpty()) {
-                System.out.println("El carrito está vacío o no fue recibido correctamente.");
-                return Response.status(400).entity("El carrito está vacío.").build();
-            }
-
             // Validar si el usuario existe
-            User user = this.userManager.getUsuarioPorId(userId);
-            if (user == null) {
-                System.out.println("Usuario no encontrado para ID: " + userId);
-                return Response.status(404).entity("Usuario no encontrado.").build();
+            User u = this.userManager.getUsuarioPorId(userId);
+            if (u == null) {
+                return Response.status(404).entity("Usuario no encontrado").build();
             }
-
-            int totalCost = 0;
-
-            // Calcular el costo total del carrito
-            for (String productId : cart.keySet()) {
-                int cantidad = cart.get(productId);
-
-                // Validar cantidad
-                if (cantidad <= 0) {
-                    System.out.println("Cantidad inválida para el producto: " + productId);
-                    return Response.status(400).entity("Cantidad inválida para el producto: " + productId).build();
+            List<Product> products = this.productdbU.getProducts();
+            for(Purchase purchase : purchases){
+                // Validar que la compra tenga datos válidos
+                if (purchase.getIdP() == null || purchase.getCantidad() <= 0) {
+                    return Response.status(400).entity("Datos de compra incompletos o inválidos").build();
                 }
-
-                // Validar producto existente
-                Product product = this.productdbU.getProduct(productId);
-                if (product == null) {
-                    System.out.println("Producto inválido en el carrito: " + productId);
-                    return Response.status(400).entity("Producto inválido en el carrito: " + productId).build();
-                }
-
-                totalCost += product.getPrecio() * cantidad;
             }
 
-            // Validar saldo suficiente
-            if (user.getSaldo() < totalCost) {
-                System.out.println("Saldo insuficiente para realizar la compra. Saldo disponible: "
-                        + user.getSaldo() + ", Costo total: " + totalCost);
-                return Response.status(403).entity("Saldo insuficiente.").build();
+            int nuevoSaldo = this.userManager.calculaNuevoSaldo(userId,purchases,products);
+            if(nuevoSaldo<0)
+                return Response.status(403).entity("Saldo insuficiente").build();
+
+            u.setSaldo(nuevoSaldo);
+            this.userManager.updateUser(userId,u);
+            try {
+                this.userdb.updateUser(u.getId(),u.getNombre(),u.getContraseña(),u.getSaldo(),u.getPerfil());
+            } catch (SQLException e) {
+                return Response.status(409).build();
             }
+            // Añadir las compras
+            for(Purchase purchase: purchases)
+                this.purchasedb.addPurchase(userId, purchase.getIdP(), purchase.getCantidad());
 
-            // Deduce el saldo del usuario
-            user.setSaldo(user.getSaldo() - totalCost);
-            userManager.updateUser(userId, user);
-
-            // Registrar las compras en la base de datos
-            for (String productId : cart.keySet()) {
-                int cantidad = cart.get(productId);
-                purchasedb.addPurchase(userId, productId, cantidad);
-            }
-
-            // Retornar el nuevo saldo
-            System.out.println("Compras registradas exitosamente. Nuevo saldo: " + user.getSaldo());
-            return Response.status(201).entity("{\"newBalance\": " + user.getSaldo() + "}").build();
+            // Retornar respuesta exitosa
+            return Response.status(201).entity(purchases).build();
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Error interno del servidor: " + e.getMessage());
             return Response.status(500).entity("Error interno del servidor").build();
+            //cambio
         }
     }
-
-
-
-    @GET
-    @Path("/{id}/balance")
-    @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Obtener el saldo de un usuario", notes = "Devuelve el saldo actual del usuario con el ID proporcionado")
-    @ApiResponses({
-            @ApiResponse(code = 200, message = "Saldo obtenido exitosamente"),
-            @ApiResponse(code = 404, message = "Usuario no encontrado"),
-            @ApiResponse(code = 500, message = "Error interno del servidor")
-    })
-    public Response getUserBalance(@PathParam("id") String userId) {
-        try {
-            User user = this.userManager.getUsuarioPorId(userId);
-            if (user == null) {
-                return Response.status(Response.Status.NOT_FOUND).entity("Usuario no encontrado").build();
-            }
-
-            // Devolver el saldo como un objeto JSON básico
-            String jsonResponse = "{\"saldo\": " + user.getSaldo() + "}";
-            return Response.ok(jsonResponse).type(MediaType.APPLICATION_JSON).build();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error interno del servidor").build();
-        }
-    }
-
-
 
 }
