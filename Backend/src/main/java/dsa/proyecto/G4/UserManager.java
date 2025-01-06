@@ -27,5 +27,5 @@ public interface UserManager {
 
     List<Purchase> ordenaInventario(List<Purchase> purchases);
 
-    Integer calculaNuevoSaldo(String id, List<Purchase> purchases, List<Product> products);
+    Integer calculaNuevoSaldo(String id, Purchase purchase, List<Product> products);
 }

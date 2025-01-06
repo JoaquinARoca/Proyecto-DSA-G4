@@ -120,19 +120,14 @@ public class UserManagerImpl implements UserManager {
         return new ArrayList<>(groupedPurchases.values());
     }
     @Override
-    public Integer calculaNuevoSaldo(String id, List<Purchase> purchases, List<Product> products){
+    public Integer calculaNuevoSaldo(String id, Purchase purchase, List<Product> products){
         Product comprado = new Product();
-        int saldoActual = getUsuarioPorId(id).getSaldo();
-        for(Purchase purchase: purchases)
-            for(Product p : products) {
-                if (p.getId().equals(purchase.getIdP()))
-                    comprado = p;
-                if(comprado!=null) {
-                    int precio = purchase.getCantidad() * comprado.getPrecio();
-                    saldoActual = saldoActual - precio;
-                    comprado=null;
-                }
-            }
-        return saldoActual;
+        for(Product p : products)
+            if(p.getId().equals(purchase.getIdP()))
+                comprado = p;
+
+        int precio = purchase.getCantidad() * comprado.getPrecio();
+        int nuevoSaldo = getUsuarioPorId(id).getSaldo()-precio;
+        return nuevoSaldo;
     }
 }

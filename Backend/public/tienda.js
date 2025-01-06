@@ -1,59 +1,47 @@
 document.addEventListener("DOMContentLoaded", async () => {
     const userId = localStorage.getItem("userId"); // Obtener el ID del usuario desde localStorage
-    console.log("userId obtenido desde localStorage:", userId); // Log para verificar el userId
-
     const balanceSpan = document.getElementById("userBalance");
     const cartItems = document.getElementById("cartItems");
     const cartTotal = document.getElementById("cartTotal");
-    console.log("Archivo tienda.js cargado correctamente");
+
+    if (!userId) {
+        console.error("No se encontró el ID del usuario. Asegúrate de que el usuario haya iniciado sesión.");
+        balanceSpan.textContent = "Error: Usuario no autenticado";
+        return;
+    }
 
     let cart = [];
     let userBalance = 0;
 
-    // Verificar si el usuario está autenticado
-    const isAuthenticated = !!userId;
-
-    if (!isAuthenticated) {
-        console.log("Usuario no autenticado: bloqueando funcionalidades."); // Log para usuarios no autenticados
-        balanceSpan.textContent = "Usuario no autenticado";
-
-        document.querySelectorAll(".btn").forEach(button => {
-            button.disabled = true;
-            button.style.cursor = "not-allowed";
-            button.style.backgroundColor = "#d3d3d3";
-        });
-
-        const buyButton = document.querySelector(".buy-btn");
-        if (buyButton) {
-            buyButton.disabled = true;
-            buyButton.style.cursor = "not-allowed";
-            buyButton.style.backgroundColor = "#d3d3d3";
+    // Función para cargar el saldo del usuario
+    async function loadBalance() {
+        if (!userId) {
+            console.error("No se encontró el ID del usuario.");
+            balanceSpan.textContent = "Error al cargar el saldo";
+            return;
         }
 
-        return;
-    }
+        console.log("Cargando saldo para userId:", userId);
 
-    async function loadBalance() {
         try {
-            console.log(`Intentando cargar el saldo para userId: ${userId}`); // Log antes de la solicitud
             const response = await fetch(`http://localhost:8080/dsaApp/usuarios/${userId}/balance`);
-            console.log("Respuesta del servidor:", response); // Log para verificar la respuesta del backend
+            console.log("Respuesta del servidor:", response);
 
             if (!response.ok) {
                 throw new Error("Error en la solicitud: " + response.statusText);
             }
 
             const data = await response.json();
-            console.log("Datos recibidos del servidor:", data); // Log para verificar los datos del backend
-
-            userBalance = data.saldo;
+            console.log("Saldo recibido:", data);
+            userBalance = data.saldo; // Actualizar el saldo
             balanceSpan.textContent = `${data.saldo.toFixed(2)}`;
         } catch (error) {
-            console.error("Error al cargar el saldo:", error); // Log para errores al cargar el saldo
+            console.error("Error al cargar el saldo:", error);
             balanceSpan.textContent = "Error al cargar el saldo";
         }
     }
 
+    // Llamar a la función para cargar el saldo
     await loadBalance();
 
     // Función para añadir al carrito
@@ -70,11 +58,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             cart.push({ name: productName, price: productPrice, quantity: 1 });
         }
 
-        userBalance -= productPrice;
-        balanceSpan.textContent = `${userBalance.toFixed(2)}`;
         updateCart();
     };
 
+    // Actualizar el carrito
     const updateCart = () => {
         cartItems.innerHTML = "";
         let total = 0;
@@ -94,30 +81,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         cartTotal.textContent = `${total.toFixed(2)}`;
     };
 
+    // Quitar producto del carrito
     window.removeFromCart = (productName) => {
         const productIndex = cart.findIndex(item => item.name === productName);
         if (productIndex !== -1) {
             const product = cart[productIndex];
-            userBalance += product.price * product.quantity;
             cart.splice(productIndex, 1);
-            balanceSpan.textContent = `${userBalance.toFixed(2)}`;
             updateCart();
         }
     };
 
+    // Función para realizar la compra
     async function purchase() {
         if (cart.length === 0) {
             alert("El carrito está vacío.");
             return;
         }
-
-        // Formatear el carrito para enviarlo al backend
-        const formattedCart = {};
-        cart.forEach(item => {
-            formattedCart[item.name] = item.quantity; // Usa el ID real si está disponible
-        });
-
-        console.log("Carrito enviado al backend:", formattedCart);
 
         try {
             const response = await fetch(`http://localhost:8080/dsaApp/usuarios/${userId}/purchase`, {
@@ -125,7 +104,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(formattedCart),
+                body: JSON.stringify(cart), // Enviar el carrito como JSON
             });
 
             if (!response.ok) {
@@ -134,17 +113,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const data = await response.json();
             alert("Compra realizada con éxito.");
-            userBalance = data.newBalance;
-            cart = [];
-            updateCart();
-            await loadBalance();
+            userBalance = data.newBalance; // Actualiza el saldo del usuario
+            cart = []; // Vacía el carrito
+            updateCart(); // Actualiza el carrito en la interfaz
+            loadBalance(); // Recarga el saldo del usuario
         } catch (error) {
             console.error("Error al realizar la compra:", error);
             alert("Ocurrió un error al procesar la compra.");
         }
     }
 
-
+    // Asignar eventos a los botones de productos
     document.querySelectorAll(".btn").forEach(button => {
         button.addEventListener("click", function () {
             const productName = this.parentElement.querySelector("h2").textContent.trim();
@@ -156,5 +135,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     });
 
+    // Hacer la función `purchase` disponible globalmente para el botón "Comprar"
     window.purchase = purchase;
 });
