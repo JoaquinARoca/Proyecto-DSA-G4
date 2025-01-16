@@ -1,7 +1,7 @@
 -- Dumping database structure for bbdd
-DROP DATABASE IF EXISTS `bbdd`;
-CREATE DATABASE IF NOT EXISTS `bbdd` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
-USE `bbdd`;
+DROP DATABASE IF EXISTS bbdd;
+CREATE DATABASE IF NOT EXISTS bbdd /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
+USE bbdd;
 
 -- Dumping structure for table bbdd.Usuari
 DROP TABLE IF EXISTS user;
@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS user (
   nombre VARCHAR(50) DEFAULT NULL,
   contraseña VARCHAR(50) DEFAULT NULL,
   saldo INT NOT NULL,
-  perfil VARCHAR(50) DEFAULT '1',
+  perfil VARCHAR(50) DEFAULT 'Perfil1',
   PRIMARY KEY (id),
   UNIQUE (nombre)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Tabla que guarda la lista de usuarios registrados';
