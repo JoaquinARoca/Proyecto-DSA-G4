@@ -36,7 +36,7 @@ public class ProductService {
     @GET
     @ApiOperation(value = "Obtener todos los productos", notes = "Devuelve una lista de todos los productos")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Successful", response = User.class, responseContainer = "List"),
+            @ApiResponse(code = 200, message = "Successful", response = Product.class, responseContainer = "List"),
     })
     @Produces(MediaType.APPLICATION_JSON)
     public Response getProducts() {

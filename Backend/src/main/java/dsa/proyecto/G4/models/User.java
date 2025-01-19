@@ -23,7 +23,7 @@ public class User {
         this.nombre = nombre;
         this.contraseña = contraseña;
         this.saldo = 0;
-        this.perfil = "Perfil1";
+        this.perfil = "1";
     }
     public User(String id, String nombre, String contraseña, Integer saldo) {
         this();
@@ -31,7 +31,7 @@ public class User {
         this.nombre = nombre;
         this.contraseña = contraseña;
         this.saldo = saldo;
-        this.perfil = "Perfil1";
+        this.perfil = "1";
     }
     public User(String id, String nombre, String contraseña, String perfil, Integer saldo) {
         this.id = id;

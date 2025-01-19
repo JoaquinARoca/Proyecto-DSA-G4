@@ -1,7 +1,7 @@
 -- Dumping database structure for bbdd
-DROP DATABASE IF EXISTS bbdd;
-CREATE DATABASE IF NOT EXISTS bbdd /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
-USE bbdd;
+DROP DATABASE IF EXISTS `bbdd`;
+CREATE DATABASE IF NOT EXISTS `bbdd` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
+USE `bbdd`;
 
 -- Dumping structure for table bbdd.Usuari
 DROP TABLE IF EXISTS user;
