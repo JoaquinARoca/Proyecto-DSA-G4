@@ -3,6 +3,7 @@ import dsa.proyecto.G4.ProductManagerImpl;
 import dsa.proyecto.G4.UserManager;
 import dsa.proyecto.G4.UserManagerImpl;
 import dsa.proyecto.G4.db.orm.dao.*;
+import dsa.proyecto.G4.models.Badge;
 import dsa.proyecto.G4.models.Product;
 import dsa.proyecto.G4.models.Purchase;
 import dsa.proyecto.G4.models.User;
@@ -17,6 +18,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Api(value = "/usuarios", description = "Endpoint to User Service")
@@ -237,6 +239,33 @@ public class UserService {
             return Response.status(500).entity("Error interno del servidor").build();
             //cambio
         }
+    }
+
+    @GET
+    @Path("/{id}/badges")
+    @ApiOperation(value = "Obtener insignias de un usuario por ID", notes = "Devuelve las insignias asociadas al usuario especificado")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successful", response = Badge.class, responseContainer = "List"),
+            @ApiResponse(code = 404, message = "Usuario no encontrado")
+    })
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getUserBadges(@PathParam("id") String id) {
+        List<Badge> badges = new ArrayList<>();
+
+        // Datos de prueba del enunciado, pruebo con id=13 y id=14 ya que no tengo un put para añadir insignias, añado tambien algunas fotos extras
+        if (id.equals("u1")) {
+            badges.add(new Badge("Master del universo", "https://cdn.pixabay.com/photo/2017/07/11/15/51/kermit-2493979_1280.png"));
+            badges.add(new Badge("Reina de DSA", "https://img.freepik.com/vector-gratis/elegante-reina-corona-oro_1308-174936.jpg"));
+        } else if (id.equals("u2")) {
+            badges.add(new Badge("Becario enfurecido", "https://cdn.pixabay.com/photo/2017/07/11/15/51/kermit-2493979_1280.png"));
+            badges.add(new Badge("El Bachiller", "https://images.vexels.com/content/205462/preview/pile-of-books-illustration-b5a415.png"));
+        } else {
+            return Response.status(404).entity("Usuario no encontrado").build();
+        }
+
+        // Usar GenericEntity para ayudar a Jersey a reconocer el tipo de la lista
+        GenericEntity<List<Badge>> entity = new GenericEntity<List<Badge>>(badges) {};
+        return Response.ok(entity).build();
     }
 
 }

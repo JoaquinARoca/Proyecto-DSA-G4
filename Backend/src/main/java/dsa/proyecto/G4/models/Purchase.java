@@ -1,7 +1,7 @@
 package dsa.proyecto.G4.models;
 
 public class Purchase {
-    private int id;
+    private Integer idPurchase;
     private String idU;
     private String idP;
     private int cantidad;
@@ -16,17 +16,17 @@ public class Purchase {
     }
 
     public Purchase(Integer id, String idU, Integer cantidad, String idP) {
-        this.id = id;
+        this.idPurchase = id;
         this.idU = idU;
         this.cantidad = cantidad;
         this.idP = idP;
     }
 
-    public int getId() {
-        return id;
+    public Integer getIdPurchase() {
+        return idPurchase;
     }
-    public void setId(Integer id) {
-        this.id = id;
+    public void setIdPurchase(Integer idPurchase) {
+        this.idPurchase = idPurchase;
     }
 
     public String getIdU() {
