@@ -4,7 +4,7 @@ public class Purchase {
     private Integer idPurchase;
     private String idU;
     private String idP;
-    private int cantidad;
+    private Integer cantidad;
 
     public Purchase() {
     }

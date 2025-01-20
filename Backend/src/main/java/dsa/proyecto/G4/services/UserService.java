@@ -222,6 +222,7 @@ public class UserService {
                 return Response.status(403).entity("Saldo insuficiente").build();
 
             u.setSaldo(nuevoSaldo);
+            u.setPerfil(this.userManager.getUsuarioPorId(userId).getPerfil());
             this.userManager.updateUser(userId,u);
             try {
                 this.userdb.updateUser(u.getId(),u.getNombre(),u.getContraseña(),u.getSaldo(),u.getPerfil());
